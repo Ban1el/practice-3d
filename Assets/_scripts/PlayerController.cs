@@ -51,12 +51,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float holdupForce = 150.0f;
     #endregion
 
-    #region Open/Close Door
-    [SerializeField] private LayerMask doorLayer;
-    private Transform selectedDoor;
-    private GameObject dragPointGameobject;
-    private int leftDoor = 0;
-    [SerializeField] private Camera cam;
+    #region Interact Door
+    [SerializeField] Camera cam;
+    Transform selectedDoor;
+    GameObject dragPointGameobject;
+    int leftDoor = 0;
+    [SerializeField] LayerMask doorLayer;
+    [SerializeField] float doorMoveRange;
     #endregion
 
     private void Start()
@@ -64,7 +65,7 @@ public class PlayerController : MonoBehaviour
         readyToJump = true;
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-        Actions.OnEnableUI?.Invoke(UserInterface.CrossHair); 
+        Actions.OnEnableUI?.Invoke(UserInterface.CrossHair);
     }
 
     private void Update()
@@ -81,7 +82,7 @@ public class PlayerController : MonoBehaviour
         HoldObject();
         SetCursor();
 
-        OpenCloseDoor();
+        InteractDoor();
     }
 
     private void FixedUpdate()
@@ -105,7 +106,7 @@ public class PlayerController : MonoBehaviour
 
     private bool InteractableDetected()
     {
-        return Physics.Raycast(cameraDirection.position, cameraDirection.forward, out hit, objectHoldRange, objectLayer); 
+        return Physics.Raycast(cameraDirection.position, cameraDirection.forward, out hit, objectHoldRange, objectLayer);
     }
 
     #region Hold Object
@@ -218,27 +219,17 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
-    #region Hold Up Object
-
-    #endregion
-
     #region Door
-    private void OpenCloseDoorTest()
+    private void InteractDoor()
     {
-     
-    }
+        //Raycast
+        RaycastHit hit;
 
-    private void OpenCloseDoor()
-    {
-        Debug.Log("Her");
-
-        RaycastHit doorHit;
-
-        if (Physics.Raycast(cameraDirection.position, cameraDirection.forward, out doorHit, 20, doorLayer))
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, doorMoveRange, doorLayer))
         {
             if (Input.GetMouseButtonDown(0))
             {
-                selectedDoor = doorHit.collider.gameObject.transform;
+                selectedDoor = hit.collider.gameObject.transform;
             }
         }
 
@@ -247,6 +238,7 @@ public class PlayerController : MonoBehaviour
             HingeJoint joint = selectedDoor.GetComponent<HingeJoint>();
             JointMotor motor = joint.motor;
 
+            //Create drag point object for reference where players mouse is pointing
             if (dragPointGameobject == null)
             {
                 dragPointGameobject = new GameObject("Ray door");
@@ -257,8 +249,10 @@ public class PlayerController : MonoBehaviour
             dragPointGameobject.transform.position = ray.GetPoint(Vector3.Distance(selectedDoor.position, transform.position));
             dragPointGameobject.transform.rotation = selectedDoor.rotation;
 
+
             float delta = Mathf.Pow(Vector3.Distance(dragPointGameobject.transform.position, selectedDoor.position), 3);
 
+            //Deciding if it is left or right door
             if (selectedDoor.GetComponent<MeshRenderer>().localBounds.center.x > selectedDoor.localPosition.x)
             {
                 leftDoor = 1;
@@ -269,9 +263,14 @@ public class PlayerController : MonoBehaviour
             }
 
             //Applying velocity to door motor
-            float speedMultiplier = 60000;
+            float speedMultiplier = 80000;
+
+            Debug.Log("Selected door z: " + Mathf.Abs(selectedDoor.parent.forward.z) + " | 0.5f");
+
             if (Mathf.Abs(selectedDoor.parent.forward.z) > 0.5f)
             {
+                Debug.Log("Drag Position x: " + dragPointGameobject.transform.position.x);
+                Debug.Log("Selected door Position x: " + selectedDoor.position.x);
                 if (dragPointGameobject.transform.position.x > selectedDoor.position.x)
                 {
                     motor.targetVelocity = delta * -speedMultiplier * Time.deltaTime * leftDoor;
@@ -283,6 +282,8 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
+                Debug.Log("Drag Position z: " + dragPointGameobject.transform.position.z);
+                Debug.Log("Selected door Position z: " + selectedDoor.position.z);
                 if (dragPointGameobject.transform.position.z > selectedDoor.position.z)
                 {
                     motor.targetVelocity = delta * -speedMultiplier * Time.deltaTime * leftDoor;
@@ -292,7 +293,6 @@ public class PlayerController : MonoBehaviour
                     motor.targetVelocity = delta * speedMultiplier * Time.deltaTime * leftDoor;
                 }
             }
-
             joint.motor = motor;
 
             if (Input.GetMouseButtonUp(0))
@@ -308,8 +308,8 @@ public class PlayerController : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.green;
-        Vector3 objectHoldDirection = cameraDirection.forward * objectHoldRange;
-        Gizmos.DrawRay(cameraDirection.position, objectHoldDirection);
+        Gizmos.color = Color.red;
+        Vector3 doorInteractDirection = cameraDirection.forward * doorMoveRange;
+        Gizmos.DrawRay(cameraDirection.position, doorInteractDirection);
     }
 }
