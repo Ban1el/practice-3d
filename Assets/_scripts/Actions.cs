@@ -7,4 +7,8 @@ public static class Actions
 {
     public static Action<UserInterface> OnEnableUI;
     public static Action<UserInterface> OnDisableUI;
+    public static Action<bool> SetPlayerControl;
+
+    public static Action<Item> InventoryAddItem;
+    public static Func<List<Item>> InventoryItemList;
 }

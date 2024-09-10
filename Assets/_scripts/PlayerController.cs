@@ -10,9 +10,11 @@ public class PlayerController : MonoBehaviour
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
     public KeyCode holdobjectKey = KeyCode.Mouse0;
+    public KeyCode inventoryKey = KeyCode.E;
 
     [Header("Movement")]
     #region Movement
+    [SerializeField] private bool canMove = true;
     public float movementSpeed;
 
     public float groundDrag;
@@ -60,6 +62,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float doorMoveRange;
     #endregion
 
+    private bool inventoryIsOpen = false;
+
     private void Start()
     {
         readyToJump = true;
@@ -70,37 +74,44 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
-        MyInput();
-        SpeedControl();
+        Inventory();
+        
+        if (canMove)
+        {
+            grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
-        if (grounded)
-            rb.drag = groundDrag;
-        else
-            rb.drag = 0;
+            MyInput();
+            SpeedControl();
 
-        HoldObject();
-        SetCursor();
+            if (grounded)
+                rb.drag = groundDrag;
+            else
+                rb.drag = 0;
 
-        InteractDoor();
+            HoldObject();
+            SetCursor();
+
+            InteractDoor();
+
+            PickItem();
+        }
     }
 
     private void FixedUpdate()
     {
-        MovePlayer();
+        if(canMove)
+            MovePlayer();
     }
 
     private void SetCursor()
     {
         if (InteractableDetected())
         {
-            Actions.OnEnableUI(UserInterface.ItemPickIcon);
             Actions.OnDisableUI(UserInterface.CrossHair);
         }
         else
         {
             Actions.OnEnableUI(UserInterface.CrossHair);
-            Actions.OnDisableUI(UserInterface.ItemPickIcon);
         }
     }
 
@@ -167,6 +178,22 @@ public class PlayerController : MonoBehaviour
 
         heldObjRB.transform.parent = null;
         heldObj = null;
+    }
+    #endregion
+
+    #region Pick Item
+    private void PickItem()
+    {
+        if (Input.GetKeyDown(holdobjectKey))
+        {
+            if (InteractableDetected())
+            {
+                if (hit.collider.CompareTag("PickableObject"))
+                {
+                    hit.collider.GetComponent<WorldItem>().Pick();
+                }
+            }
+        }
     }
     #endregion
 
@@ -306,10 +333,55 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
+    #region Inventory
+    private void Inventory()
+    {
+        if (Input.GetKeyDown(inventoryKey))
+        {
+
+            if (!inventoryIsOpen)
+            {
+                Actions.SetPlayerControl?.Invoke(false);
+                Actions.OnDisableUI?.Invoke(UserInterface.CrossHair);
+                Actions.OnEnableUI?.Invoke(UserInterface.ItemPickIcon);
+
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                inventoryIsOpen = true;
+            }
+            else
+            {
+                Actions.OnDisableUI?.Invoke(UserInterface.ItemPickIcon);
+                Actions.OnEnableUI?.Invoke(UserInterface.CrossHair);
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                Actions.SetPlayerControl?.Invoke(true);
+
+                inventoryIsOpen = false;
+            }
+        }
+    }
+    #endregion
+
+    private void SetControl(bool _canMove)
+    {
+        canMove = _canMove;
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
         Vector3 doorInteractDirection = cameraDirection.forward * doorMoveRange;
         Gizmos.DrawRay(cameraDirection.position, doorInteractDirection);
+    }
+
+    private void OnEnable()
+    {
+        Actions.SetPlayerControl += SetControl;
+    }
+
+    private void OnDisable()
+    {
+        Actions.SetPlayerControl -= SetControl;
     }
 }
