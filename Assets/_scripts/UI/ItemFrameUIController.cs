@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEditor.Progress;
 
 public class ItemFrameUIController : MonoBehaviour
 {
@@ -14,18 +15,16 @@ public class ItemFrameUIController : MonoBehaviour
         ChildObj = transform.GetChild(0).gameObject;
         itemImage = ChildObj.GetComponent<Image>();
     }
-
-    private void UpdateItem(int slotNo, Item item) 
+ 
+    public void UpdateItem(int index ,Item item)
     {
-        if (itemSlotNumber == slotNo)
+        if (slotItem == null)
         {
-            if (slotItem == null)
-            {
-                SetSlot(item);
-            }else if (item.GetItemID() != slotItem.GetItemID())
-            {
-                SetSlot(item);
-            }
+            SetSlot(item);
+        }
+        else if (item.GetItemID() != slotItem.GetItemID())
+        {
+            SetSlot(item);
         }
     }
 
@@ -38,11 +37,6 @@ public class ItemFrameUIController : MonoBehaviour
 
     private void OnEnable()
     {
-        Actions.UpdateItem += UpdateItem;
-    }
-
-    private void OnDisable()
-    {
-        Actions.UpdateItem -= UpdateItem;
+        Actions.CheckUpdateInventory?.Invoke(itemSlotNumber);
     }
 }

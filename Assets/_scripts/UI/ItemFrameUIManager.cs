@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 public class ItemFrameUIManager : MonoBehaviour
 {
@@ -12,6 +13,17 @@ public class ItemFrameUIManager : MonoBehaviour
         itemFrameUIControllers.AddRange(controllers);
 
         SetSlotNo();
+    }
+
+    private void UpdateInventory(int index)
+    {
+        if (Actions.InventoryItemList() != null)
+        {
+            if (Actions.InventoryItemList().Count > index)
+            {
+                itemFrameUIControllers[index].UpdateItem(index, Actions.InventoryItemList()[index]);
+            }
+        }
     }
 
     private void SetSlotNo()
@@ -26,6 +38,11 @@ public class ItemFrameUIManager : MonoBehaviour
 
     private void OnEnable()
     {
-        Actions.UpdateInventory?.Invoke();
+        Actions.CheckUpdateInventory += UpdateInventory;
+    }
+
+    private void OnDisable()
+    {
+        Actions.CheckUpdateInventory -= UpdateInventory;
     }
 }

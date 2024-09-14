@@ -86,7 +86,7 @@ GameObject:
   - component: {fileID: 5208838576863354851}
   - component: {fileID: 6048361947071438975}
   - component: {fileID: 3781761859591385268}
-  - component: {fileID: 7379785350744538247}
+  - component: {fileID: 1734373630855026870}
   m_Layer: 5
   m_Name: Grid Element
   m_TagString: Untagged
@@ -152,7 +152,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &7379785350744538247
+--- !u!114 &1734373630855026870
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -164,3 +164,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23954c080642f1340b5c12e14086437f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  itemSlotNumber: 0
+  ChildObj: {fileID: 0}
+  itemImage: {fileID: 0}
