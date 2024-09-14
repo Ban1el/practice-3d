@@ -10,5 +10,6 @@ public static class Actions
     public static Action<bool> SetPlayerControl;
 
     public static Action<Item> InventoryAddItem;
-    public static Func<List<Item>> InventoryItemList;
+    public static Action<int, Item> UpdateItem;
+    public static Action UpdateInventory;
 }
